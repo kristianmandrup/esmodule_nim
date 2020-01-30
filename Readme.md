@@ -2,6 +2,20 @@
 
 This Nim module aims to bridge Nim with ES modules
 
+## API
+
+ES import
+
+- `esImport(name, nameOrPath)` emits: `import { x } from 'xyz'`
+- `esImportDefault(name, nameOrPath)` emits: `import x from 'xyz'`
+- `esImportDefaultAs(name, nameOrPath)` emits: `import { default as x } from 'xyz'`
+- `esImportAll(nameOrPath` emits: `import * from 'xyz'`
+
+ES export
+
+- `esExport(name)` emits: `export x`
+- `esExportDefault(name)` emits: `export default x`
+
 ## Usage
 
 Using the ES module bindings in Nim

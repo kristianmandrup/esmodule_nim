@@ -38,4 +38,20 @@ proc esImportImpl(name: string, nameOrPath: string, bindVar: bool): string =
 template esImport*(name: string, nameOrPath: string, bindVar: bool = true) =
   {.emit: esImportImpl(name, nameOrPath, bindVar).}
 
-  
+## ES export
+
+# emits: export x
+proc esExportImpl(name: string): string =
+  result = "export " & name
+
+# export x
+proc esExport*(name: cstring) {.
+  {.emit: esExportImpl(name).}
+
+# emits: export default x
+proc esExportDefaultImpl(name: string): string =
+  result = "export default " & name
+
+# export x
+proc esExportDefault*(name: cstring) {.
+  {.emit: esExportDefaultImpl(name).}
