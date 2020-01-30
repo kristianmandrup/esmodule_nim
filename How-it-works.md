@@ -36,3 +36,28 @@ Now it correctly outputs ``import { x } from "./x";`` which is valid ES module s
 
 We used regular string concatenation using ``&`` and then the method ``addQuoted`` to
 ensure output of a quoted string.
+
+## Auto bind vars
+
+Ideally we would like to improve the compilation output to include a var binding to the imported constant
+A naive approach:
+
+```nim
+# emits: import { x as x$$ } from 'xyz';
+# emits: var x = $xx; (optional var binding)
+proc esImportImpl(name: string, nameOrPath: string, bindVar: bool): string =
+  result = "import { " & name & "$$ } from "
+  result.addQuoted nameOrPath & ";\n"
+  if bindVar
+    result = result & "var " & name & " = " & name & "$$;"
+
+# import { x as x$$ } from 'xyz';
+# var x = x$$;
+template esImport*(name: string, nameOrPath: string, bindVar: bool = true) =
+  {.emit: esImportImpl(name, nameOrPath, bindVar).}
+```
+
+Unfortunately the `var` will only be output to the `js` file and not be present in the Nim program.
+To do this correctly we would need to use a macro that operates on the AST to generate Nim code programmatically.
+
+Please help write a macro that generates proper `var` binding (should be possible!?)

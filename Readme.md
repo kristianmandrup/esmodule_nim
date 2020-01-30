@@ -6,10 +6,10 @@ This Nim module aims to bridge Nim with ES modules
 
 ES import
 
-- `esImport(name, nameOrPath, bindVar = true)` emits: `import { x_ } from 'xyz'`
-- `esImportDefault(name, nameOrPath, bindVar = true)` emits: `import x_ from 'xyz'`
-- `esImportDefaultAs(name, nameOrPath, bindVar = true)` emits: `import { default as x_ } from 'xyz'`
-- `esImportAll(nameOrPath, bindVar = true)` emits: `import * from 'xyz'`
+- `esImport(name, nameOrPath)` emits: `import { x as x$$ } from 'xyz'`
+- `esImportDefault(name, nameOrPath)` emits: `import x$$ from 'xyz'`
+- `esImportDefaultAs(name, nameOrPath)` emits: `import { default as x$$ } from 'xyz'`
+- `esImportAll(nameOrPath)` emits: `import * from 'xyz'`
 
 ES export
 
@@ -45,6 +45,7 @@ To use the compiled with in NodeJS with experimental ES modules enabled:
 
 ```sh
 $ mv x_import.js x_import.mjs
+# import.mjs
 ```
 
 Note: Files imported by an mjs file may only be other `mjs` files (turtles all the way down).
@@ -79,27 +80,7 @@ Linking to ES module `mjs` file from html page:
 <script nomodule src="fallback.js"></script>
 ```
 
-Browsers that understand `type=module` should ignore scripts with a `nomodule` attribute. 
-This means you can serve a module tree to module-supporting browsers while providing 
+Browsers that understand `type=module` should ignore scripts with a `nomodule` attribute.
+This means you can serve a module tree to module-supporting browsers while providing
 a fall-back to other browsers.
 
-## Auto bind vars
-
-We can improve the compiler output to include a var binding to the imported constant
-
-```nim
-# emits: import { x as x$$ } from 'xyz';
-# emits: var x = $xx; (optional var binding)
-proc esImportImpl(name: string, nameOrPath: string, bindVar: bool): string =
-  result = "import { " & name & "$$ } from "
-  result.addQuoted nameOrPath & ";\n"
-  if bindVar
-    result = result & "var " & name & " = " & name & "$$;"
-
-# import { x as x$$ } from 'xyz';
-# var x = x$$;
-template esImport*(name: string, nameOrPath: string, bindVar: bool = true) =
-  {.emit: esImportImpl(name, nameOrPath, bindVar).}
-```
-
-Note: All the ES import procedures now includes a `bindVar` argument which defaults to `true`
