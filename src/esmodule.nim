@@ -11,10 +11,10 @@ proc esImportAll*(nameOrPath: cstring) {.
 
 # emits: import xyz from 'xyz'
 proc esImportDefaultImpl(name: string, nameOrPath: string, bindVar: bool = true): string =
-  result = "import _i_" & name & "_ from "
+  result = "import " & name & "_ from "
   result.addQuoted nameOrPath & ";\n"
   if bindVar
-    result = result & "var " & name & " = _i_" & name & "_;"
+    result = result & "var " & name & " = " & name & "_;"
 
 # import xyz from 'xyz'
 proc esImportDefault*(name: cstring, nameOrPath: cstring, bindVar: bool = true) {.
@@ -22,10 +22,10 @@ proc esImportDefault*(name: cstring, nameOrPath: cstring, bindVar: bool = true) 
 
 # emits: import { default as abc } from 'xyz'
 proc esImportDefaultAsImpl(name: string, nameOrPath: string, bindVar: bool = true): string =
-  result = "import { default as _i_" & name & "_ } from "
+  result = "import { default as " & name & "$$ } from "
   result.addQuoted nameOrPath & ";\n"
   if bindVar
-    result = result & "var " & name & " = _i_" & name & "_;"
+    result = result & "var " & name & " = " & name & "$$;"
 
 # import { default as abc } from 'xyz'
 proc esImportDefaultAs*(name: cstring, nameOrPath: cstring, bindVar: bool = true) {.
@@ -33,12 +33,12 @@ proc esImportDefaultAs*(name: cstring, nameOrPath: cstring, bindVar: bool = true
 
 # emits: import { x } from 'xyz'
 proc esImportImpl(name: string, nameOrPath: string, bindVar: bool = true): string =
-  result = "import { " & name & " as _i_" & name & "_ } from "
+  result = "import { " & name & " as " & name & "$$ } from "
   result.addQuoted nameOrPath & ";\n"
   if bindVar
-    result = result & "var " & name & " = _i_" & name & "_;"
+    result = result & "var " & name & " = " & name & "$$;"
 
-# import { _i_x_ } from 'xyz'; var x = _i_x_;
+# import { x_ } from 'xyz'; var x = x_;
 template esImport*(name: string, nameOrPath: string, bindVar: bool = true) =
   {.emit: esImportImpl(name, nameOrPath, bindVar).}
 

@@ -6,9 +6,9 @@ This Nim module aims to bridge Nim with ES modules
 
 ES import
 
-- `esImport(name, nameOrPath, bindVar = true)` emits: `import { _i_x_ } from 'xyz'`
-- `esImportDefault(name, nameOrPath, bindVar = true)` emits: `import _i_x_ from 'xyz'`
-- `esImportDefaultAs(name, nameOrPath, bindVar = true)` emits: `import { default as _i_x_ } from 'xyz'`
+- `esImport(name, nameOrPath, bindVar = true)` emits: `import { x_ } from 'xyz'`
+- `esImportDefault(name, nameOrPath, bindVar = true)` emits: `import x_ from 'xyz'`
+- `esImportDefaultAs(name, nameOrPath, bindVar = true)` emits: `import { default as x_ } from 'xyz'`
 - `esImportAll(nameOrPath, bindVar = true)` emits: `import * from 'xyz'`
 
 ES export
@@ -18,87 +18,86 @@ ES export
 
 ## Usage
 
-Using the ES module bindings in Nim
+The Nim JS compiler by default spits out all the Nim JS code inside a scope. 
+This means that the`import` and `export` statements will be invalid, since they 
+must be in global scope of the file.
 
-```nim
-import esmodules # custom binding module we created above
+Compile `x_import.nim` to nodejs compatible JavaScript using:
 
-# import { x as _i_x_ } from 'xyz'
-esImport("x", "./xyz")  
-
-# reference constants imported (implicitly available)
-var x {.importjs. "_i_x_"} # links to imported var
-echo x
-```
-
-TODO: Add macro `importjs_id` to auto add prefix and postfix for bound JavaScript import identifier.
-
-The Nim JS compiler by default spits out all the Nim JS code inside a scope, 
-so that `import` and `export` statements are invalid (must be in global/outer scope of file).
-
-Compile `x_import.nim` to nodejs compatible JavaScript using: 
-
-```sh 
+```sh
 $ nim js -d:nodejs -r x_import.nim
+# x_import.js
 ```
 
-Rename compiled `js` file to `mjs` if used with nodes using (experimental) ES module support.
+You can use the compiler generated `x_import.js` with either:
+
+- NodeJS
+- With transpilers and bundlers (babel, webpack etc)
+- Modern browsers
+
+See [Mozilla Developer guide on JavaScript modules](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Modules) for an overview of where and how ES modules can be used.
+
+## NodeJS in experimental ES module mode
+
+To use the compiled with in NodeJS with experimental ES modules enabled:
+
+- Rename compiled `js` file to `mjs`
 
 ```sh
 $ mv x_import.js x_import.mjs
 ```
 
-```js
-// ... Nim compiler generated code
-
-import { "x" } from "./x";
-var xx = x;
-rawEcho(xx);
-```
-
-The imported file `x` must be an `mjs` file as well (turtles all the way down).
+Note: Files imported by an mjs file may only be other `mjs` files (turtles all the way down).
 
 You can run the `mjs` file via Node using the `--experimental-modules` option
 
 `node --experimental-modules x_import.mjs`
 
-Alternatively compile the ``mjs`` files to compatible ES 5 JavaScript using `Babel <https://babeljs.io/>`_.
+## Transpilers, bundlers
 
-## How it works
+Compile the `js` files to compatible ES 5 JavaScript using `Babel <https://babeljs.io/>`_.
+This can also be done via webpack etc. using a plugin (you might have to write it)
 
-The naive approach of using ``{importjs "import { # } from # }`` would generate: 
+## Modern browsers
 
-``import { "x" } from "./x";`` which is not what we desire.
+Use the js file "as is". In the browser, the import statements can be used anywhere.
+A common use is to lazyload parts of the app, f.ex in a Micro Frontend architecture.
 
-To circumvent this, we use a more advanced technique.
+ES modules are available in browsers (since 2017)
 
-```nim
-proc esImportImpl(name: string, nameOrPath: string): string =
-  result = "import { " & name & " } from "
-  result.addQuoted nameOrPath
+- Safari 10.1+
+- Chrome 61+
+- Firefox 60+
+- Edge 16+
 
-template esImport*(name: string, nameOrPath: string) =
-  {.emit: esImportImpl(name, nameOrPath).}
+All you need is `type=module` on the `script` element, and the browser will treat the inline or external script as an ECMAScript module.
+
+Linking to ES module `mjs` file from html page:
+
+```html
+<script type="module" src="module.mjs"></script>
+<script nomodule src="fallback.js"></script>
 ```
 
-Now it correctly outputs ``import { x } from "./x";`` as we desired. 
-
-Note that we used regular string concatenation using ``&`` and then the method ``addQuoted`` to
-ensure output of a quoted string.
+Browsers that understand `type=module` should ignore scripts with a `nomodule` attribute. 
+This means you can serve a module tree to module-supporting browsers while providing 
+a fall-back to other browsers.
 
 ## Auto bind vars
 
 We can improve the compiler output to include a var binding to the imported constant
 
 ```nim
-# # emits: import { x } from 'xyz'
+# emits: import { x as x$$ } from 'xyz';
+# emits: var x = $xx; (optional var binding)
 proc esImportImpl(name: string, nameOrPath: string, bindVar: bool): string =
-  result = "import { " & name & "_ } from "
+  result = "import { " & name & "$$ } from "
   result.addQuoted nameOrPath & ";\n"
   if bindVar
-    result = result & "var " & name & " = " & name & "_;"
+    result = result & "var " & name & " = " & name & "$$;"
 
-# import { x_ } from 'xyz'; var x = _x;
+# import { x as x$$ } from 'xyz';
+# var x = x$$;
 template esImport*(name: string, nameOrPath: string, bindVar: bool = true) =
   {.emit: esImportImpl(name, nameOrPath, bindVar).}
 ```
