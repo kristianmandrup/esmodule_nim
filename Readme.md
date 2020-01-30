@@ -6,10 +6,10 @@ This Nim module aims to bridge Nim with ES modules
 
 ES import
 
-- `esImport(name, nameOrPath)` emits: `import { x } from 'xyz'`
-- `esImportDefault(name, nameOrPath)` emits: `import x from 'xyz'`
-- `esImportDefaultAs(name, nameOrPath)` emits: `import { default as x } from 'xyz'`
-- `esImportAll(nameOrPath` emits: `import * from 'xyz'`
+- `esImport(name, nameOrPath, bindVar = true)` emits: `import { _i_x_ } from 'xyz'`
+- `esImportDefault(name, nameOrPath, bindVar = true)` emits: `import _i_x_ from 'xyz'`
+- `esImportDefaultAs(name, nameOrPath, bindVar = true)` emits: `import { default as _i_x_ } from 'xyz'`
+- `esImportAll(nameOrPath, bindVar = true)` emits: `import * from 'xyz'`
 
 ES export
 
@@ -23,21 +23,29 @@ Using the ES module bindings in Nim
 ```nim
 import esmodules # custom binding module we created above
 
-# import { x } from 'xyz'
-esImport("x", "./x")  
+# import { x as _i_x_ } from 'xyz'
+esImport("x", "./xyz")  
 
 # reference constants imported (implicitly available)
-var xx {.importjs. "x"} # links to imported var
-echo xx
+var x {.importjs. "_i_x_"} # links to imported var
+echo x
 ```
+
+TODO: Add macro `importjs_id` to auto add prefix and postfix for bound JavaScript import identifier.
 
 The Nim JS compiler by default spits out all the Nim JS code inside a scope, 
 so that `import` and `export` statements are invalid (must be in global/outer scope of file).
 
-Compile ``x_import.nim`` to nodejs compatible JavaScript using: 
+Compile `x_import.nim` to nodejs compatible JavaScript using: 
 
 ```sh 
 $ nim js -d:nodejs -r x_import.nim
+```
+
+Rename compiled `js` file to `mjs` if used with nodes using (experimental) ES module support.
+
+```sh
+$ mv x_import.js x_import.mjs
 ```
 
 ```js
@@ -48,11 +56,11 @@ var xx = x;
 rawEcho(xx);
 ```
 
-The imported file ``x`` must be an ``mjs`` file as well (turtles all the way down).
+The imported file `x` must be an `mjs` file as well (turtles all the way down).
 
-You can run the ``mjs`` file via Node using the ``--experimental-modules`` option
+You can run the `mjs` file via Node using the `--experimental-modules` option
 
-`node --experimental-modules my-game.mjs`
+`node --experimental-modules x_import.mjs`
 
 Alternatively compile the ``mjs`` files to compatible ES 5 JavaScript using `Babel <https://babeljs.io/>`_.
 
@@ -95,3 +103,4 @@ template esImport*(name: string, nameOrPath: string, bindVar: bool = true) =
   {.emit: esImportImpl(name, nameOrPath, bindVar).}
 ```
 
+Note: All the ES import procedures now includes a `bindVar` argument which defaults to `true`
