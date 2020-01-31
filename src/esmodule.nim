@@ -27,6 +27,9 @@ proc esImportDefaultAsImpl(name: string, nameOrPath: string): string =
 proc esImportDefaultAs*(name: cstring, nameOrPath: cstring) {.
   {.emit: esImportDefaultAsImpl(name, nameOrPath).}
 
+template esImportDefaultAsVar*(varName: untyped, name: string, nameOrPath: string) =
+  var varName = {.emit: esImportDefaultAsImpl(name, nameOrPath).}  
+
 # emits: import { x } from 'xyz'
 proc esImportImpl(name: string, nameOrPath: string): string =
   result = "import { " & name & " as " & name & "$$ } from "
@@ -36,6 +39,9 @@ proc esImportImpl(name: string, nameOrPath: string): string =
 template esImport*(name: string, nameOrPath: string) =
   {.emit: esImportImpl(name, nameOrPath).}
 
+template esImportVar*(varName: untyped, name: string, nameOrPath: string) =
+  var varName = {.emit: esImportImpl(name, nameOrPath).}
+  
 ## ES export
 
 # emits: export x

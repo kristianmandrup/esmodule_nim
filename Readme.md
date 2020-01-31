@@ -16,6 +16,24 @@ ES export
 - `esExport(name)` emits: `export x`
 - `esExportDefault(name)` emits: `export default x`
 
+## Injecting and binding Nim vars
+
+```nim
+template esImportVar*(varName: untyped, name: string, nameOrPath: string) =
+  var varName = {.emit: esImportImpl(name, nameOrPath).}
+
+template esImportDefaultAsVar*(varName: untyped, name: string, nameOrPath: string) =
+  var varName = {.emit: esImportDefaultAsImpl(name, nameOrPath).}  
+```
+
+Var injection with import binding usage:
+
+```nim
+# nimx the nim var name injected
+# x is the identifier imported from module xyz
+esImportVar("nimx", "x", "xyz")
+```
+
 ## Usage
 
 The Nim JS compiler by default spits out all the Nim JS code inside a scope. 
