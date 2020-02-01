@@ -18,17 +18,20 @@ proc esImportDefaultImpl(name: string, nameOrPath: string): string =
 proc esImportDefault*(name: cstring, nameOrPath: cstring) {.
   {.emit: esImportDefaultImpl(name, nameOrPath).}
 
+template esImportDefaultVar*(varName: untyped, name: string, nameOrPath: string) =
+  var varName = {.emit: esImportDefaultImpl(name, nameOrPath).}  
+  
 # emits: import { default as abc } from 'xyz'
-proc esImportDefaultAsImpl(name: string, nameOrPath: string): string =
+proc esImportDefaultAsImpl(asName: string, nameOrPath: string): string =
   result = "import { default as " & name & "$$ } from "
   result.addQuoted nameOrPath & ";\n"
 
 # import { default as abc } from 'xyz'
-proc esImportDefaultAs*(name: cstring, nameOrPath: cstring) {.
-  {.emit: esImportDefaultAsImpl(name, nameOrPath).}
+proc esImportDefaultAs*(asName: cstring, nameOrPath: cstring) {.
+  {.emit: esImportDefaultAsImpl(asName, nameOrPath).}
 
-template esImportDefaultAsVar*(varName: untyped, name: string, nameOrPath: string) =
-  var varName = {.emit: esImportDefaultAsImpl(name, nameOrPath).}  
+template esImportDefaultAsVar*(varName: untyped, asName: string, nameOrPath: string) =
+  var varName = {.emit: esImportDefaultAsImpl(asName, nameOrPath).}  
 
 # emits: import { x } from 'xyz'
 proc esImportImpl(name: string, nameOrPath: string): string =

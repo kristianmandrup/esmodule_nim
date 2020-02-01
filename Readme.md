@@ -24,14 +24,37 @@ template esImportVar*(varName: untyped, name: string, nameOrPath: string) =
 
 template esImportDefaultAsVar*(varName: untyped, name: string, nameOrPath: string) =
   var varName = {.emit: esImportDefaultAsImpl(name, nameOrPath).}  
+
+template esImportDefaultVar*(varName: untyped, asName: string, nameOrPath: string) =
+  var varName = {.emit: esImportDefaultAsImpl(asName, nameOrPath).}  
 ```
 
 Var injection with import binding usage:
 
+`esImportVar`
+
 ```nim
-# nimx the nim var name injected
+# nimx is the name of the nim var identifier injected into the nim code (compile time)
 # x is the identifier imported from module xyz
+# import { x as x$$ } from "xyz";
+# var nimx = x$$;
 esImportVar("nimx", "x", "xyz")
+```
+
+`esImportDefaultVar`
+
+```nim
+# import x$$ from "xyz";
+# var nimx = x$$;
+esImportDefaultVar("nimx", "x", "xyz")
+```
+
+`esImportDefaultAsVar`
+
+```nim
+# import { default as x$$ } from "xyz";
+# var nimx = x$$;
+esImportDefaultAsVar("nimx", "x", "xyz")
 ```
 
 ## Usage
