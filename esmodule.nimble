@@ -1,6 +1,6 @@
 # Package
 
-version       = "0.1.0"
+version       = "0.1.1"
 author        = "Kristian Mandrup"
 description   = "ES module bindings for Nim"
 license       = "MIT"
