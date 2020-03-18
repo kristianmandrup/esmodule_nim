@@ -2,6 +2,22 @@
 
 This Nim module aims to bridge Nim with ES modules
 
+## Notice
+
+Please note that this module requires PR [jsgen improvements for ES module support, JS decorators etc](https://github.com/nim-lang/Nim/pull/13381)
+to function. Let's make it happen!
+
+The main template of importance:
+
+```nim
+template esImportVar*(varName: untyped, name: string, nameOrPath: string) =
+  {.emit: esImportImpl(name, nameOrPath).}
+  var varName
+  {.emit: "%GENID% = " & name & "$$ " .}
+```
+
+Which uses the `%GENID%` feature addition which provides a reference to the most recent generated JS variable identifier (ie. for `varName`).
+
 ## API
 
 ES import

@@ -43,7 +43,9 @@ template esImport*(name: string, nameOrPath: string) =
   {.emit: esImportImpl(name, nameOrPath).}
 
 template esImportVar*(varName: untyped, name: string, nameOrPath: string) =
-  var varName = {.emit: esImportImpl(name, nameOrPath).}
+  {.emit: esImportImpl(name, nameOrPath).}
+  var varName
+  {.emit: "%GENID% = " & name & "$$ " .}
   
 ## ES export
 
