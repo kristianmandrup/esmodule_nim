@@ -32,6 +32,36 @@ ES export
 - `esExport(name)` emits: `export x`
 - `esExportDefault(name)` emits: `export default x`
 
+## Sample macro
+
+```nim
+macro esImportVar*(name: string, nameOrPath: string, body: untyped) :untyped =
+  var importNode = quote do: 
+    {.emit: esImportImpl(`name`, `nameOrPath`).}
+  var assignNode = quote do: 
+    {.emit: "%GENID% = " & `name` & "$$ " .}
+  result = nnkStmtList.newTree([
+    importNode,
+    body,
+    assignNode
+  ])
+```
+
+Usage
+
+```nim
+esImportVar("x", "./x.mjs"):
+  var x: string = ""
+```
+
+Will generate:
+
+```js
+import { x as x$$ } from "./x.mjs";
+var x_129019 = [null];
+x_129019 = x$$;
+```
+
 ## Injecting and binding Nim vars
 
 ```nim

@@ -50,10 +50,19 @@ proc esImportImpl(name: string, nameOrPath: string): string =
 template esImport*(name: string, nameOrPath: string) =
   {.emit: esImportImpl(name, nameOrPath).}
 
-template esImportVar*(varName: untyped, name: string, nameOrPath: string) =
-  {.emit: esImportImpl(name, nameOrPath).}
-  var varName: JsObject
-  {.emit: "%GENID% = " & name & "$$ " .}
+macro dynVar*(body: untyped) :untyped =
+  result = nnkStmtList.newTree([body])
+
+macro esImportVar*(name: string, nameOrPath: string, body: untyped) :untyped =
+  var importNode = quote do: 
+    {.emit: esImportImpl(`name`, `nameOrPath`).}
+  var assignNode = quote do: 
+    {.emit: "%GENID% = " & `name` & "$$;" .}
+  result = nnkStmtList.newTree([
+    importNode,
+    body,
+    assignNode
+  ])
   
 ## ES export
 
