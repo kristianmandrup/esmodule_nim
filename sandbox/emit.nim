@@ -1,2 +1,7 @@
-import macros, jsffi
-{.emit: "import { x as x$$  } from './aba'".}
+import ../src/esmodule
+
+esImportVar(x, "x", "./x")
+
+echo x
+
+
